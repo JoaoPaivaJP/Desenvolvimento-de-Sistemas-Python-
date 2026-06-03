@@ -1,0 +1,106 @@
+import customtkinter as ctk  # Importa a biblioteca CustomTkinter para criar a interface gráfica moderna
+import bcrypt  # Importa a biblioteca bcrypt para criptografia segura de senhas
+import os  # Importa o módulo os (embora não esteja sendo usado diretamente neste trecho)
+
+# Configurações globais de aparência da biblioteca CustomTkinter
+ctk.set_appearance_mode("System")  # Define o tema visual de fundo da aplicação como escuro
+ctk.set_default_color_theme("blue")  # Define a paleta de cores padrão dos componentes como azul
+
+
+# POO: Definição da classe 'App' que herda de 'ctk.CTk'. 
+# Isso significa que a classe 'App' É UMA janela do CustomTkinter (Conceito de Herança).
+class App(ctk.CTk):
+
+    # POO: Método construtor da classe. É executado automaticamente sempre que um novo objeto 'App' é criado.
+    def __init__(self):
+        # POO: Chama o construtor da classe pai (ctk.CTk) para inicializar corretamente a janela base.
+        super().__init__()
+
+        # POO: Define o título da janela. 'self' refere-se à própria instância da janela atual.
+        self.title("Sistema de Cadastro - Desktop")
+
+        # Define o tamanho inicial da janela em pixels (largura x altura).
+        self.geometry("400x350")
+
+        # --- Elementos da Interface (Instanciação de Objetos) ---
+
+        # POO: Cria um objeto do tipo CTkLabel. O primeiro argumento 'self' indica que o 'pai' (container) deste elemento é a própria janela.
+        # POO: 'self.label' armazena esse objeto como um atributo da classe, permitindo que ele seja acessado por outros métodos se necessário.
+        self.label = ctk.CTkLabel(
+            self, text="Cadastro de Usuário - comentado ", font=("Roboto", 24)
+        )
+        # Posiciona o label na tela adicionando um espaçamento vertical (padding) de 20 pixels.
+        self.label.pack(pady=20)
+
+        # POO: Cria e armazena o campo de entrada de texto (Entry) para o e-mail como um atributo do objeto.
+        self.email_entry = ctk.CTkEntry(
+            self, placeholder_text="E-mail", width=300
+        )
+        # Posiciona o campo de e-mail na interface com espaçamento vertical de 10 pixels.
+        self.email_entry.pack(pady=10)
+
+        # POO: Cria o campo de entrada para a senha. O argumento 'show="*"' oculta os caracteres digitados por segurança.
+        self.senha_entry = ctk.CTkEntry(
+            self, placeholder_text="Senha", width=300, show="*"
+        )
+        # Posiciona o campo de senha na interface.
+        self.senha_entry.pack(pady=10)
+
+        # POO: Cria o botão de cadastro. O argumento 'command=self.salvar_dados' usa o conceito de "callback",
+        # indicando que o método 'salvar_dados' da nossa classe será executado quando o botão for clicado.
+        self.btn_cadastrar = ctk.CTkButton(
+            self, text="Cadastrar", command=self.salvar_dados
+        )
+        self.btn_cadastrar.pack(pady=20)
+          
+        self.btn_sair = ctk.CTkButton(
+            self, text="Sair", command=self.salvar_dados
+        )
+        self.btn_sair.pack(pady=20)
+        # Posiciona o botão na interface.
+
+    # POO: Método (função interna da classe) responsável por encapsular a lógica de criptografia.
+    # Recebe o parâmetro 'senha' além do 'self' obrigatório de métodos de instância.
+    def criptografar_senha(self, senha):
+        # Converte a string da senha em um array de bytes (necessário para o bcrypt).
+        senha_bytes = senha.encode("utf-8")
+        # Gera um 'salt' aleatório (sequência de caracteres que impede ataques de dicionário).
+        salt = bcrypt.gensalt()
+        # Gera o hash seguro combinando a senha em bytes e o salt.
+        hash_senha = bcrypt.hashpw(senha_bytes, salt)
+        # Converte o hash resultante de volta para string UTF-8 e o retorna.
+        return hash_senha.decode("utf-8")
+
+    # POO: Método que processa e salva as informações da interface.
+    def salvar_dados(self):
+        # POO: Usa o método '.get()' dos atributos/objetos de entrada de texto para capturar o que o usuário digitou.
+        email = self.email_entry.get()
+        senha = self.senha_entry.get()
+
+        # Verifica se ambos os campos foram preenchidos (se não estão vazios).
+        if email and senha:
+            # POO: Chama o método interno da classe para criptografar a senha capturada.
+            senha_crypto = self.criptografar_senha(senha)
+
+            # Abre (ou cria) o arquivo "usuarios.txt" no modo 'append' ('a'), que adiciona texto ao final do arquivo sem apagar o anterior.
+            with open("usuarios.txt", "a") as arquivo:
+                # Escreve o e-mail e a senha criptografada formatados no arquivo, quebrando a linha (\n) no final.
+                arquivo.write(f"{email} | {senha_crypto}\n")
+
+            # Exibe uma mensagem de confirmação no console do terminal.
+            print(f"Usuário {email} cadastrado com sucesso!")
+
+            # POO: Limpa o texto digitado nos campos da interface do índice 0 até o fim ('end').
+            self.email_entry.delete(0, "end")
+            self.senha_entry.delete(0, "end")
+        else:
+            # Caso algum campo esteja em branco, exibe um aviso no console.
+            print("Por favor, preencha todos os campos.")
+
+
+# Ponto de entrada padrão do Python. Garante que o bloco abaixo só execute se este arquivo for o arquivo principal rodado.
+if __name__ == "__main__":
+    # POO: Instanciação. Cria um objeto real na memória a partir do molde/classe 'App' que definimos.
+    app = App()
+    # POO: Chama o método 'mainloop' (herdado de ctk.CTk) que inicia o loop de eventos, mantendo a janela aberta e escutando cliques.
+    app.mainloop()
